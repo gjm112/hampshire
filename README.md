@@ -1,0 +1,4 @@
+hampshire
+=========
+
+Some interesting examples
