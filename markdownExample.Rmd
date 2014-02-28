@@ -1,0 +1,80 @@
+R Markdown Example 
+========================================================
+
+We're going to create a document that combines text, code, and output to record everything that we did in an analysis.  
+
+First let's read in the data.  
+```{r}
+dat <-read.csv("/Users/gregorymatthews/Dropbox/hampshire/dataHampshire.csv")
+dat$x2 <- as.factor(dat$x2)
+```
+
+We now have a data set named ``dat".
+
+Let's look at a summary of the data and some univariate plots.  
+
+```{r}
+dat$X <- NULL
+summary(dat)
+#boxplots of continuous variables.
+boxplot(y,x1,names=c("y","x1"))
+```
+
+Now let's look at some bivariate relationships between the variables?  
+
+```{r}
+#Scatterplot matrix
+plot(dat)
+```
+
+Now we will build some linear models.
+
+
+Let's first fit the model $y_i = \beta_{0} + \beta_{1} x_i + \epsilon_i, i=1,\dots,n$ 
+
+```{r}
+lmOut <- lm(y~x1,data=dat)
+summary(lmOut)
+plot(dat$x1,dat$y,pch=16)
+points(dat$x1,lmOut$fitted.values,type="l",col="red")
+```
+The p-value associated with $\widehat{\beta}_1$ is `r summary(lmOut)$coefficients[2,4] `.  So we could conclude that there is a negative relationship between $y$ and $x_1$.
+
+Let's look at that scatterplot matrix again, but now we'll use colors to distinguish the two groups.  
+
+```{r}
+#Scatterplot matrix
+col <- rep("red",50)
+col[dat$x2==1] <- "blue"
+plot(dat,col=col,pch=16)
+```
+
+It actually looks like the relationship between $y$ and $x_1$ is positive, but that there are two distinct groups.  Let's now fit a multiple linear regression model with $x_2$ added to the model.  
+
+```{r}
+lmOut <- lm(y~x1+x2,data=dat)
+summary(lmOut)
+plot(dat$x1,dat$y,pch=16)
+points(dat$x1[dat$x2==1],lmOut$fitted.values[dat$x2==1],type="l",col="blue",lwd=3)
+points(dat$x1[dat$x2==0],lmOut$fitted.values[dat$x2==0],type="l",col="red",lwd=3)
+```
+The p-value associated with $\widehat{\beta}_1$ is `r summary(lmOut)$coefficients[2,4] ` and the p-value associated with $\widehat{\beta}_2$ is  `r summary(lmOut)$coefficients[3,4] `. Both are highly significant.  
+
+Now let's add some diagnostic plots to show that we are checking out assumptions.  
+
+```{r}
+#boxplot to check for outliers
+boxplot(lmOut$residuals)
+#Plot fitted values versus residual to check for homoskedasticity
+plot(lmOut$fitted.values,lmOut$residuals,pch=16)
+abline(h=0)
+#Plot predictors versus residual to check for homoskedasticity
+plot(dat$x1,lmOut$residuals,pch=16)
+abline(h=0)
+#check for normality
+qqnorm(lmOut$residuals)
+#Influence plot
+library(car)
+influencePlot(lmOut)
+```
+
