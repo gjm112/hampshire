@@ -1,0 +1,79 @@
+\documentclass{article}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+{\Huge \bf $\rho, \rho, \rho$ your boot: Bootstrapping and the Correlation Coefficient}
+
+Let's say that we want to estimate the correlation coefficient for a data set with two varaiables.  To calculate the Pearson correlation coefficient in R, we use the "cor" function.  \\
+
+
+<<echo=FALSE>>=
+library(MASS)
+set.seed(1234)
+dat <- as.data.frame(mvrnorm(50,mu=c(0,0),Sigma=matrix(c(1,.9,.9,1),nrow=2)))
+names(dat)<-c("x1","x2")
+@
+
+<<fig=TRUE>>=
+#Lets say we have a data set called "dat"
+#Inspect the first ten rows
+dat[1:10,] 
+#summary of the data
+summary(dat)
+#plot the data
+plot(dat)
+#Compute the correlation matrix
+cor(dat)
+#Compute the correlation coefficient
+(rho <- cor(dat)[1,2])
+@
+
+Our estimate of correlation is $\widehat{\rho}$ = \Sexpr{round(rho,4)}.  But how sure are we of this estimate?  To quantify our uncertainty, we can construct a confidence interval.  But how do we do here?  Bootstrapping!\\
+
+What is boot strapping?
+\begin{itemize}
+\item Boot strapping is a resampling technique. 
+\item It is often used for calculating the error of the sampling distribution when the distribution is unknown (or you don't want to make any assumptions about it).
+\item Bootstrapping works by sampling with replacement from the observed data (with the same $n$) and calculating the statistic that we are interested in based on the bootstrapped sample. 
+\item We can repeat this process $B$ times to obtain $B$ bootstrapped estimates of the statistic we are interested in.  
+\item This is an estimate of the sampling distribution of the statistic. 
+\end{itemize}
+
+Let's see an example:
+<<fig=TRUE>>=
+#How many bootstrap samples do we want? 
+B <- 1000
+#resampling
+rhoBootList <- list()
+for (i in 1:B){
+datTemp <- dat[sample(c(1:50),50,replace=TRUE),]
+rhoBootList[[i]] <- cor(datTemp)[1,2]
+}
+hist(unlist(rhoBootList))
+sqrt(var(unlist(rhoBootList)))
+@
+
+Using these boot strap samples we can calculate a confidence interval using the percentile method.  
+<<>>=
+#95% confidence interval for rho
+quantile(unlist(rhoBootList),c(0.025,0.975))
+@
+This interval is not symmetric.  Why?
+
+
+<<>>=
+#What if we knew the distribution of the data? 
+#Whatdoes the real sampling distribution look like?  
+rhoList<-list()
+for (i in 1:1000){
+dat <- as.data.frame(mvrnorm(50,mu=c(0,0),Sigma=matrix(c(1,.9,.9,1),nrow=2)))
+rhoList[[i]]<-cor(dat)[1,2]
+}
+
+hist(unlist(rhoList))
+qqnorm(unlist(rhoList))
+sqrt(var(unlist(rhoList)))
+@
+
+\end{document}
