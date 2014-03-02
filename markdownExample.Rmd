@@ -17,7 +17,7 @@ Let's look at a summary of the data and some univariate plots.
 dat$X <- NULL
 summary(dat)
 #boxplots of continuous variables.
-boxplot(y,x1,names=c("y","x1"))
+boxplot(dat$y,dat$x1,names=c("y","x1"))
 ```
 
 Now let's look at some bivariate relationships between the variables?  
